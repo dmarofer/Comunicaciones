@@ -1,6 +1,5 @@
 
 #include <Arduino.h>
-#include <string>						// Para el manejo de cadenas
 #include <AsyncMqttClient.h>			// Vamos a probar esta que es Asincrona: https://github.com/marvinroger/async-mqtt-client
 
 class Comunicaciones
@@ -15,7 +14,6 @@ private:
     typedef void(*TipoCallbackEvento)(unsigned int Evento_Comunicaciones, char Info[100]);                          // Definir el tipo (pantilla) de la funcion callback que me tendran que pasar (aqui yo tengo que saber como es aunque no la tenga aun para usarla claro)
                                                                                                          // typedef crea un alias de un tipo. En este caso crea el typo Callback Mensaje recibido que es "puntero a una funcion void X (String, String)"
     TipoCallbackEvento MiCallbackEventos = nullptr;                             // Instanaciar aqui el nuevo tipo vacio (nullptr porque recordemos que es puntero)
-                                                                                // La funcion real que haga X se crea fuera de la clase y luego me pasan el puntero. Si no coincide el tipo void X (String, String) pues casca claro
                                                                    
     
     // Funciones internas para pasarle al Objeto MQTT, sus eventos ;)
@@ -34,11 +32,11 @@ private:
     char mqttclientid[33];
     char RiegamticoTopic[33];
 
-    String cmndTopic;
-	String statTopic;
-	String teleTopic;
-	String lwtTopic;
-    String RiegamaticoTeleTopic;
+    char cmndTopic[100];
+	char statTopic[100];
+	char teleTopic[100];
+	char lwtTopic[100];
+    char RiegamaticoTeleTopic[100];
 
     void FormaEstructuraTopics();
 
@@ -70,7 +68,7 @@ public:
 
     void SetEventoCallback(TipoCallbackEvento ref);	// Para pasarme el manejador de eventos
 
-    void Enviar(String Topic, String Payload);
+    void Enviar(char Topic[100], char Payload[100]);
 
     void Conectar();
     void Desonectar();

@@ -1,7 +1,6 @@
 
 #include <Comunicaciones.h>
 #include <Arduino.h>
-#include <string>						// Para el manejo de cadenas
 #include <AsyncMqttClient.h>			// Vamos a probar esta que es Asincrona: https://github.com/marvinroger/async-mqtt-client
 #include <ArduinoJson.h>				// OJO: Tener instalada una version NO BETA (a dia de hoy la estable es la 5.13.4). Alguna pata han metido en la 6
 
@@ -75,11 +74,26 @@ void Comunicaciones::SetRiegamaticoTopic(char l_RiegamticoTopic[33]){
 
 void Comunicaciones::FormaEstructuraTopics(){
 
-    cmndTopic = "cmnd/" + String(mqtttopic) + "/#";
-    statTopic = "stat/" + String(mqtttopic);
-    teleTopic = "tele/" + String(mqtttopic);
-    lwtTopic = teleTopic + "/LWT";
-    RiegamaticoTeleTopic = "tele/" + String(RiegamticoTopic) + "/#";
+    //cmndTopic = "cmnd/" + String(mqtttopic) + "/#";
+    strcpy(cmndTopic, "cmmnd/");
+    strcat(cmndTopic, mqtttopic);
+    strcat(cmndTopic, "/#");
+    
+    //statTopic = "stat/" + String(mqtttopic);
+    strcpy(statTopic, "stat/");
+    strcat(statTopic, mqtttopic);
+
+    //teleTopic = "tele/" + String(mqtttopic);
+    strcpy(teleTopic, "tele/");
+    strcat(teleTopic, mqtttopic);
+
+
+    //lwtTopic = teleTopic + "/LWT";
+    strcpy(lwtTopic, teleTopic);
+    strcat(lwtTopic, "/LWT");
+    
+    
+    //RiegamaticoTeleTopic = "tele/" + String(RiegamticoTopic) + "/#";
     
 }
 
@@ -104,7 +118,7 @@ void Comunicaciones::Conectar(){
     ClienteMQTT.setClientId(mqttclientid);
     ClienteMQTT.setCredentials(mqttusuario,mqttpassword);
     ClienteMQTT.setKeepAlive(4);
-    ClienteMQTT.setWill(lwtTopic.c_str(),2,true,"Offline");
+    ClienteMQTT.setWill(lwtTopic,2,true,"Offline");
 
     // Aqui vamos a explicar por que esto, que deberia ser lo "normal" no funciona y lo que hay que hacer    
     // Esto se llama "Voy a pasar a un objeto instanciado en esta clase una funcion callback miembro, ahi queda eso"
@@ -127,16 +141,16 @@ void Comunicaciones::Conectar(){
     ClienteMQTT.onPublish(std::bind(&Comunicaciones::onMqttPublish, this, std::placeholders::_1));
     
     // Y despues de todo esto conectar
-    strcpy(Mensaje, ("Intentando conectar a " + String(mqttserver)).c_str());
+    strcpy(Mensaje, ("Intentando conectar a ");
+    strcat(Mensaje, mqttserver);
     this->MiCallbackEventos(EVENTO_CONECTANDO, Mensaje);
-    
     ClienteMQTT.connect();
     
 }
 
-void Comunicaciones::Enviar(String Topic, String Payload){
+void Comunicaciones::Enviar(char Topic[100], char Payload[100]){
 
-    ClienteMQTT.publish(Topic.c_str(), 2, false, Payload.c_str());
+    ClienteMQTT.publish(Topic, 2, false, Payload);
 
 }
 
@@ -152,17 +166,17 @@ void Comunicaciones::onMqttConnect(bool sessionPresent) {
     bool susflag = false;
 	bool lwtflag = false;
 	
-    char Mensaje[300];
+    char Mensaje[100];
 
 	// Suscribirse al topic de Entrada de Comandos y a los de tele y LWT del riegamatico
-	if (ClienteMQTT.subscribe(cmndTopic.c_str(), 2) && ClienteMQTT.subscribe(RiegamaticoTeleTopic.c_str(), 2)) {
+	if (ClienteMQTT.subscribe(cmndTopic, 2)) {
 	
 		susflag = true;				
 
 	}
 		
 	// Publicar un Online en el LWT
-	if (ClienteMQTT.publish((teleTopic + "/LWT").c_str(), 2,true,"Online")){
+	if (ClienteMQTT.publish(lwtTopic, 2,true,"Online")){
 
 		lwtflag = true;
 
@@ -233,6 +247,7 @@ void Comunicaciones::onMqttMessage(char* topic, char* payload, AsyncMqttClientMe
         // Aqui me la cocino yo a mi gusto, miro si es cmnd/#, y construyo un Json muy bonito con el comando
         // Despues a su vez yo paso este JSON mi comando MiCallbackMsgRecibido al main para que haga con ella lo que guste
         // Que generalmente sera enviarlo a la tarea de evaluacion de comandos para ver que hacer.
+        
         String s_topic = String(topic);
 
 		// Para que no casque si no viene payload. Asi todo OK al gestor de comandos le llega vacio como debe ser, el JSON lo pone bien.
@@ -247,7 +262,7 @@ void Comunicaciones::onMqttMessage(char* topic, char* payload, AsyncMqttClientMe
 		strlcpy(c_payload, payload, len+1); 			            // Copiar del payload el tamaño justo. strcopy pone al final un NULL
 		
 		// Y ahora lo pasamos a String que esta limpito
-		String s_payload = String(c_payload);
+        //String s_payload = String(c_payload);
 
 		// Sacamos el prefijo del topic, o sea lo que hay delante de la primera /
 		int Indice1 = s_topic.indexOf("/");
@@ -263,9 +278,9 @@ void Comunicaciones::onMqttMessage(char* topic, char* payload, AsyncMqttClientMe
 			DynamicJsonBuffer jsonBuffer;
 			JsonObject& ObjJson = jsonBuffer.createObject();
 			ObjJson.set("COMANDO",Comando);
-			ObjJson.set("PAYLOAD",s_payload);
+			ObjJson.set("PAYLOAD",c_payload);
 
-			char JSONmessageBuffer[300];
+			char JSONmessageBuffer[100];
 			ObjJson.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
             
 
