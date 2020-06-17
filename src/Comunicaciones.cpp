@@ -1,10 +1,12 @@
 
 #include <Comunicaciones.h>
 #include <Arduino.h>
-#include <AsyncMqttClient.h>			// Vamos a probar esta que es Asincrona: https://github.com/marvinroger/async-mqtt-client
 #include <ArduinoJson.h>				// OJO: Tener instalada una version NO BETA (a dia de hoy la estable es la 5.13.4). Alguna pata han metido en la 6
+#include <WiFi.h>
+#include <PubSubClient.h>
 
-AsyncMqttClient ClienteMQTT;
+WiFiClient espClient;
+PubSubClient ClienteMQTT(espClient);
 
 Comunicaciones::Comunicaciones(){
 
@@ -75,7 +77,7 @@ void Comunicaciones::SetRiegamaticoTopic(char l_RiegamticoTopic[33]){
 void Comunicaciones::FormaEstructuraTopics(){
 
     //cmndTopic = "cmnd/" + String(mqtttopic) + "/#";
-    strcpy(cmndTopic, "cmmnd/");
+    strcpy(cmndTopic, "cmnd/");
     strcat(cmndTopic, mqtttopic);
     strcat(cmndTopic, "/#");
     
@@ -105,52 +107,50 @@ bool Comunicaciones::IsConnected(){
 
 void Comunicaciones::Conectar(){
 
-    char Mensaje[100];
-    //strcpy(Mensaje, "MQTT: Configurando cliente MQTT");
-    //this->MiCallbackEventos(EVENTO_CONECTANDO, Mensaje);
-
-    ClienteMQTT = AsyncMqttClient();
-
     this->FormaEstructuraTopics();
 
     ClienteMQTT.setServer(mqttserver, 1883);
-    ClienteMQTT.setCleanSession(true);
-    ClienteMQTT.setClientId(mqttclientid);
-    ClienteMQTT.setCredentials(mqttusuario,mqttpassword);
-    ClienteMQTT.setKeepAlive(4);
-    ClienteMQTT.setWill(lwtTopic,2,true,"Offline");
-
-    // Aqui vamos a explicar por que esto, que deberia ser lo "normal" no funciona y lo que hay que hacer    
-    // Esto se llama "Voy a pasar a un objeto instanciado en esta clase una funcion callback miembro, ahi queda eso"
-    /*
-    ClienteMQTT.onConnect(onMqttConnect);
-    ClienteMQTT.onDisconnect(onMqttDisconnect);
-    ClienteMQTT.onMessage(onMqttMessage);
-    ClienteMQTT.onPublish(onMqttPublish);
-    */
-  
-    // Podriamos pensar que bueno, esto o algo parecido podria funcionar porque en realidad como callback al objeto MQTT
-    // yo le tengo que pasar una funcion REAL, INSTANCIADA
-    // ClienteMQTT.onConnect(this->onMqttConnect);
-
-    // Y es correcto, pero se hace asi, con std:bind (que facil eh :D estaba fumao el que invento esto jaja)
-    // lo de los placeholders hace referencia a los parametros de la funcion
-    ClienteMQTT.onConnect(std::bind(&Comunicaciones::onMqttConnect, this, std::placeholders::_1));
-    ClienteMQTT.onDisconnect(std::bind(&Comunicaciones::onMqttDisconnect, this, std::placeholders::_1));
-    ClienteMQTT.onMessage(std::bind(&Comunicaciones::onMqttMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
-    ClienteMQTT.onPublish(std::bind(&Comunicaciones::onMqttPublish, this, std::placeholders::_1));
+    ClienteMQTT.setCallback(std::bind(&Comunicaciones::RxCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     
-    // Y despues de todo esto conectar
-    strcpy(Mensaje, ("Intentando conectar a ");
+    char Mensaje[100];
+    strcpy(Mensaje, "Intentando conectar a ");
     strcat(Mensaje, mqttserver);
     this->MiCallbackEventos(EVENTO_CONECTANDO, Mensaje);
-    ClienteMQTT.connect();
+    
+    if (ClienteMQTT.connect(mqttclientid,mqttusuario,mqttpassword,lwtTopic,2,true,"Offline",true)){
+ 
+        ClienteMQTT.publish(lwtTopic,"Online");
+        
+        strcpy(Mensaje, "Conectado al servidor MQTT");
+        this->MiCallbackEventos(EVENTO_CONECTANDO, Mensaje);		
+
+        char Mensaje[100];
+
+        // Suscribirse al topic de Entrada de Comandos y a los de tele y LWT del riegamatico
+        if (ClienteMQTT.subscribe(cmndTopic, 1)) {
+        
+            strcpy(Mensaje, "Suscrito al topic de comandos: ");
+            strcat(Mensaje, cmndTopic);
+            MiCallbackEventos(EVENTO_CONECTADO, Mensaje);			
+
+        }
+
+        else {
+
+            strcpy(Mensaje, "ERROR al suscribirse al topic de comandos: ");
+            strcat(Mensaje, cmndTopic);
+            MiCallbackEventos(EVENTO_CONECTANDO, Mensaje);		
+
+        }
+            
+    }
+
     
 }
 
 void Comunicaciones::Enviar(char Topic[100], char Payload[100]){
 
-    ClienteMQTT.publish(Topic, 2, false, Payload);
+    ClienteMQTT.publish(Topic, Payload, false);
 
 }
 
@@ -161,151 +161,63 @@ void Comunicaciones::Desonectar(){
     
 }
 
-void Comunicaciones::onMqttConnect(bool sessionPresent) {
+void Comunicaciones::RxCallback(char* topic, byte* payload, unsigned int length) {
+  
+    // Toda esta funcion me la dispara la libreria MQTT cuando recibe algo y me pasa todo lo de arriba
+    // Aqui me la cocino yo a mi gusto, miro si es cmnd/#, y construyo un Json muy bonito con el comando
+    // Despues a su vez yo paso este JSON mi comando MiCallbackMsgRecibido al main para que haga con ella lo que guste
+    // Que generalmente sera enviarlo a la tarea de evaluacion de comandos para ver que hacer.
+    
+    // El Payload me viene en un array de bytes (logico porque el MQTT transporta Bytes, si yo codifico ASCII porque soy Humano es mi problema)
+    // Ademas el bufer que se usa es el mismo que para publicar asi que me viene con Kakafu de otros mensajes, de ahi el Length
 
-    bool susflag = false;
-	bool lwtflag = false;
-	
-    char Mensaje[100];
+    // Pero cojo y le meto en la ultima posicion el de final de cadena
+    payload[length] = '\0';
+    // Y con esta cosa tan bonita y simple el tio listo ya sabe hasta donde llenarme el char array c_payload, hasta el \0
+    char *c_payload = (char *) payload;
 
-	// Suscribirse al topic de Entrada de Comandos y a los de tele y LWT del riegamatico
-	if (ClienteMQTT.subscribe(cmndTopic, 2)) {
-	
-		susflag = true;				
+    String s_topic = String(topic);
 
-	}
-		
-	// Publicar un Online en el LWT
-	if (ClienteMQTT.publish(lwtTopic, 2,true,"Online")){
+    // Lo que viene en el char* payload viene de un buffer que trae KAKA, hay que limpiarlo (para eso nos pasan len y tal)
+    // Sacamos el prefijo del topic, o sea lo que hay delante de la primera /
+    int Indice1 = s_topic.indexOf("/");
+    String Prefijo = s_topic.substring(0, Indice1);
+    
+    // Si el prefijo es cmnd o tele lo procesamos
+    if (Prefijo == "cmnd" || Prefijo == "tele") { 
 
-		lwtflag = true;
+        // Sacamos el "COMANDO" del topic, o sea lo que hay detras de la ultima /
+        int Indice2 = s_topic.lastIndexOf("/");
+        String Comando = s_topic.substring(Indice2 + 1);
 
-	}
+        DynamicJsonBuffer jsonBuffer;
+        JsonObject& ObjJson = jsonBuffer.createObject();
+        ObjJson.set("COMANDO",Comando);
+        ObjJson.set("PAYLOAD",c_payload);
 
-
-
-	if (!susflag || !lwtflag){
-
-		// Si falla la suscripcion o el envio del Online malo kaka. Me desconecto para repetir el proceso.
-        strcpy(Mensaje, "Algo falla al suscribirme a los topics");
-        MiCallbackEventos(EVENTO_DESCONECTADO, Mensaje);
-		this->Desonectar();
-
-	}
-
-	else{
-
-        strcpy(Mensaje, "Conectado y suscrito correctamente");
-        MiCallbackEventos(EVENTO_CONECTADO, Mensaje);
-
-	}
-
-}
-
-void Comunicaciones::onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
-
-    char Razon_Desconexion[100];
-
-    switch (reason){
-
-        case AsyncMqttClientDisconnectReason::MQTT_SERVER_UNAVAILABLE:
-
-            strcpy(Razon_Desconexion, "Servidor MQTT no disponible");
-
-        break;
-
-        case AsyncMqttClientDisconnectReason::TCP_DISCONNECTED:
-
-            strcpy(Razon_Desconexion, "Conexion MQTT Perdida");
-
-        break;
-
+        char JSONmessageBuffer[100];
+        ObjJson.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
         
-        case AsyncMqttClientDisconnectReason::MQTT_NOT_AUTHORIZED:
 
-            strcpy(Razon_Desconexion, "MQTT: Acceso denegado");
+        if (Prefijo == "cmnd"){
 
-        break;
+            MiCallbackEventos(Comunicaciones::EVENTO_CMND_RX, JSONmessageBuffer);
 
+        }
 
-        default:
+        else if (Prefijo == "tele"){
 
-            strcpy(Razon_Desconexion, "Otro error de conexion MQTT sin implementar");
+            MiCallbackEventos(Comunicaciones::EVENTO_TELE_RX, JSONmessageBuffer);
 
-        break;
-
-
+        }
+                    
     }
 
-	MiCallbackEventos(EVENTO_DESCONECTADO, Razon_Desconexion);
-
-}
-
-void Comunicaciones::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
-  
-		// Toda esta funcion me la dispara la libreria MQTT cuando recibe algo y me pasa todo lo de arriba
-        // Aqui me la cocino yo a mi gusto, miro si es cmnd/#, y construyo un Json muy bonito con el comando
-        // Despues a su vez yo paso este JSON mi comando MiCallbackMsgRecibido al main para que haga con ella lo que guste
-        // Que generalmente sera enviarlo a la tarea de evaluacion de comandos para ver que hacer.
-        
-        String s_topic = String(topic);
-
-		// Para que no casque si no viene payload. Asi todo OK al gestor de comandos le llega vacio como debe ser, el JSON lo pone bien.
-		if (payload == NULL){
-
-			payload = "NULL";
-
-		}
-	
-		// Lo que viene en el char* payload viene de un buffer que trae KAKA, hay que limpiarlo (para eso nos pasan len y tal)
-		char c_payload[len+1]; 										// Array para el payload y un hueco mas para el NULL del final
-		strlcpy(c_payload, payload, len+1); 			            // Copiar del payload el tamaño justo. strcopy pone al final un NULL
-		
-		// Y ahora lo pasamos a String que esta limpito
-        //String s_payload = String(c_payload);
-
-		// Sacamos el prefijo del topic, o sea lo que hay delante de la primera /
-		int Indice1 = s_topic.indexOf("/");
-		String Prefijo = s_topic.substring(0, Indice1);
-		
-		// Si el prefijo es cmnd o tele lo procesamos
-		if (Prefijo == "cmnd" || Prefijo == "tele") { 
-
-			// Sacamos el "COMANDO" del topic, o sea lo que hay detras de la ultima /
-			int Indice2 = s_topic.lastIndexOf("/");
-			String Comando = s_topic.substring(Indice2 + 1);
-
-			DynamicJsonBuffer jsonBuffer;
-			JsonObject& ObjJson = jsonBuffer.createObject();
-			ObjJson.set("COMANDO",Comando);
-			ObjJson.set("PAYLOAD",c_payload);
-
-			char JSONmessageBuffer[100];
-			ObjJson.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-            
-
-            if (Prefijo == "cmnd"){
-
-                MiCallbackEventos(Comunicaciones::EVENTO_CMND_RX, JSONmessageBuffer);
-
-            }
-
-            else if (Prefijo == "tele"){
-
-                MiCallbackEventos(Comunicaciones::EVENTO_TELE_RX, JSONmessageBuffer);
-
-            }
-						
-		}
-
-
-
 		
 }
 
-void Comunicaciones::onMqttPublish(uint16_t packetId) {
-  
-	// Al publicar no hacemos nada de momento.
+void Comunicaciones::RunFast(){
+
+    ClienteMQTT.loop();
 
 }
-

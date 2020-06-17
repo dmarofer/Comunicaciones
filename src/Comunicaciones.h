@@ -1,6 +1,6 @@
 
 #include <Arduino.h>
-#include <AsyncMqttClient.h>			// Vamos a probar esta que es Asincrona: https://github.com/marvinroger/async-mqtt-client
+//#include <AsyncMqttClient.h>			// Vamos a probar esta que es Asincrona: https://github.com/marvinroger/async-mqtt-client
 
 class Comunicaciones
 {
@@ -18,10 +18,11 @@ private:
     
     // Funciones internas para pasarle al Objeto MQTT, sus eventos ;)
     // Luego veremos que hay que hacer malabares para pasarselas
-    void onMqttConnect(bool sessionPresent);
-    void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
-    void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
-    void onMqttPublish(uint16_t packetId);
+    //void onMqttConnect(bool sessionPresent);
+    //void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
+    //void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
+    //void onMqttPublish(uint16_t packetId);
+    void RxCallback (char* topic, byte* payload, unsigned int length);
     
     // Variables internas de configuracion para el objeto MQTT
     char mqttserver[40];
@@ -75,6 +76,7 @@ public:
     
     bool IsConnected();         // Para saber si esta conectado
     
+    void RunFast();             // Loop para mantener la vida de la conexion y recibir mensajes
     
 };
 
