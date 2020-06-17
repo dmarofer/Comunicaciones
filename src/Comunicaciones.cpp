@@ -2,8 +2,14 @@
 #include <Comunicaciones.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>				// OJO: Tener instalada una version NO BETA (a dia de hoy la estable es la 5.13.4). Alguna pata han metido en la 6
-#include <WiFi.h>
 #include <PubSubClient.h>
+
+#ifdef ESP32
+  #include <WiFi.h>
+#else
+ #include <ESP8266WiFi.h>          
+#endif
+
 
 WiFiClient espClient;
 PubSubClient ClienteMQTT(espClient);

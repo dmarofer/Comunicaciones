@@ -1,6 +1,4 @@
 
-#include <Arduino.h>
-//#include <AsyncMqttClient.h>			// Vamos a probar esta que es Asincrona: https://github.com/marvinroger/async-mqtt-client
 
 class Comunicaciones
 {
