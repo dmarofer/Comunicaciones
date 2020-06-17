@@ -1,4 +1,5 @@
 
+#include <Arduino.h>
 
 class Comunicaciones
 {
