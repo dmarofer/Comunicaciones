@@ -2,14 +2,8 @@
 #include <Comunicaciones.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>				// OJO: Tener instalada una version NO BETA (a dia de hoy la estable es la 5.13.4). Alguna pata han metido en la 6
+#include <WiFi.h>
 #include <PubSubClient.h>
-
-#ifdef ESP32
-  #include <WiFi.h>
-#else
- #include <ESP8266WiFi.h>          
-#endif
-
 
 WiFiClient espClient;
 PubSubClient ClienteMQTT(espClient);
@@ -23,7 +17,7 @@ Comunicaciones::Comunicaciones(){
     strcpy(mqttpassword, "nopasswd");
     strcpy(mqttclientid, "noclientid");
     strcpy(RiegamticoTopic, "RIEGAMATICO");
-    
+       
 }
 
 Comunicaciones::~Comunicaciones(){
@@ -117,6 +111,7 @@ void Comunicaciones::Conectar(){
 
     ClienteMQTT.setServer(mqttserver, 1883);
     ClienteMQTT.setCallback(std::bind(&Comunicaciones::RxCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    ClienteMQTT.setKeepAlive(3);
     
     char Mensaje[100];
     strcpy(Mensaje, "Intentando conectar a ");
@@ -124,8 +119,8 @@ void Comunicaciones::Conectar(){
     this->MiCallbackEventos(EVENTO_CONECTANDO, Mensaje);
     
     if (ClienteMQTT.connect(mqttclientid,mqttusuario,mqttpassword,lwtTopic,2,true,"Offline",true)){
- 
-        ClienteMQTT.publish(lwtTopic,"Online");
+
+        ClienteMQTT.publish(lwtTopic,"Online",true);
         
         strcpy(Mensaje, "Conectado al servidor MQTT");
         this->MiCallbackEventos(EVENTO_CONECTANDO, Mensaje);		

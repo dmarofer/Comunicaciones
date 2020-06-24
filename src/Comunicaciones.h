@@ -1,5 +1,6 @@
 
 #include <Arduino.h>
+//#include <AsyncMqttClient.h>			// Vamos a probar esta que es Asincrona: https://github.com/marvinroger/async-mqtt-client
 
 class Comunicaciones
 {
@@ -39,8 +40,7 @@ private:
     char RiegamaticoTeleTopic[100];
 
     void FormaEstructuraTopics();
-
-
+   
 
 public:
     
@@ -67,7 +67,7 @@ public:
     void SetRiegamaticoTopic(char l_RiegamticoTopic[33]);      // Para las comunicaciones con riegamatico
 
     void SetEventoCallback(TipoCallbackEvento ref);	// Para pasarme el manejador de eventos
-
+    
     void Enviar(char Topic[100], char Payload[100]);
 
     void Conectar();
