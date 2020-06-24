@@ -1,6 +1,6 @@
 
 #include <Arduino.h>
-//#include <AsyncMqttClient.h>			// Vamos a probar esta que es Asincrona: https://github.com/marvinroger/async-mqtt-client
+
 
 class Comunicaciones
 {
@@ -10,18 +10,15 @@ private:
 
     // Esto en cristiano moderno lo vamos a llamar por su nombre. Manejadores de eventos.
     // Voy a hacer un unico manejador de eventos que pase un evento de un tipo definido aqui, y un char array con informacion
-    // Este envia el comando recibido en el fomrato JSON que yo me he inventado ( {})
-    typedef void(*TipoCallbackEvento)(unsigned int Evento_Comunicaciones, char Info[100]);                          // Definir el tipo (pantilla) de la funcion callback que me tendran que pasar (aqui yo tengo que saber como es aunque no la tenga aun para usarla claro)
-                                                                                                         // typedef crea un alias de un tipo. En este caso crea el typo Callback Mensaje recibido que es "puntero a una funcion void X (String, String)"
-    TipoCallbackEvento MiCallbackEventos = nullptr;                             // Instanaciar aqui el nuevo tipo vacio (nullptr porque recordemos que es puntero)
+    // Este envia el comando recibido en el fomrato JSON que yo me he inventado en un char array de 100 junto con un int tipo de evento 
+    typedef void(*TipoCallbackEvento)(unsigned int Evento_Comunicaciones, char Info[100]);  // Definir el tipo (pantilla) de la funcion callback que me tendran que pasar (aqui yo tengo que saber como es aunque no la tenga aun para usarla claro)
+                                                                                            // typedef crea un alias de un tipo. En este caso crea el typo Callback Mensaje recibido que es "puntero a una funcion void X (String, String)"
+    TipoCallbackEvento MiCallbackEventos = nullptr;                                         // Instanaciar aqui el nuevo tipo vacio (nullptr porque recordemos que es puntero)
                                                                    
     
-    // Funciones internas para pasarle al Objeto MQTT, sus eventos ;)
+    // Funciones internas de esta clase para pasarle al Objeto MQTT como manejador de sus eventos)
     // Luego veremos que hay que hacer malabares para pasarselas
-    //void onMqttConnect(bool sessionPresent);
-    //void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
-    //void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
-    //void onMqttPublish(uint16_t packetId);
+    // En esta libreria PubSubclient solo hay una funcion que se ejecuta cuando llega un mensaje y es asi.
     void RxCallback (char* topic, byte* payload, unsigned int length);
     
     // Variables internas de configuracion para el objeto MQTT
@@ -37,13 +34,14 @@ private:
 	char statTopic[100];
 	char teleTopic[100];
 	char lwtTopic[100];
-    char RiegamaticoTeleTopic[100];
-
+    
+    // Funcion para crear la estructura de los topics.
     void FormaEstructuraTopics();
    
 
 public:
     
+    // Enum para definir los tipos de eventos que devolvera nuestro callback
     enum Tipo_Evento_Comunicaciones {
 
         EVENTO_CONECTANDO,              // Cuando iniciamos una conexion MQTT
@@ -55,27 +53,27 @@ public:
 		
 	};
     
+    // Constructor y destructor
     Comunicaciones();
     ~Comunicaciones();
     
-    void SetMqttServidor(char* l_mqttserver);            // Configurar el servidor MQTT
-    void SetMqttUsuario(char l_mqttusuario[19]);         // Configurar el usuario
-    void SetMqttPassword(char l_mqttpassword[19]);       // Configurar la contraseña
-    void SetMqttTopic(char l_mqtttopic[33]);             // Configurar el topic base
-    void SetMqttClientId(char l_mqttclientid[33]);       // Configurar el topic base
+    // Funciones de configuracion
+    void SetMqttServidor(char* l_mqttserver);                // Configurar el servidor MQTT
+    void SetMqttUsuario(char l_mqttusuario[19]);             // Configurar el usuario
+    void SetMqttPassword(char l_mqttpassword[19]);           // Configurar la contraseña
+    void SetMqttTopic(char l_mqtttopic[33]);                 // Configurar el topic base
+    void SetMqttClientId(char l_mqttclientid[33]);           // Configurar el topic base
+    void SetRiegamaticoTopic(char l_RiegamticoTopic[33]);    // Para las comunicaciones con riegamatico
+    void SetEventoCallback(TipoCallbackEvento ref);          // Para pasarme el manejador de eventos
     
-    void SetRiegamaticoTopic(char l_RiegamticoTopic[33]);      // Para las comunicaciones con riegamatico
+    void Enviar(char Topic[100], char Payload[100]);         // Funcion para publicar un payload en un topic
 
-    void SetEventoCallback(TipoCallbackEvento ref);	// Para pasarme el manejador de eventos
+    void Conectar();                                         // Funcion para Conectar al servidor MQTT y publicar el LWT
+    void Desonectar();                                       // Funcion para desconectar del servidor MQTT
     
-    void Enviar(char Topic[100], char Payload[100]);
-
-    void Conectar();
-    void Desonectar();
+    bool IsConnected();                                      // Para saber si esta conectado
     
-    bool IsConnected();         // Para saber si esta conectado
-    
-    void RunFast();             // Loop para mantener la vida de la conexion y recibir mensajes
+    void RunFast();                                          // Loop de vida
     
 };
 

@@ -1,9 +1,14 @@
 
 #include <Comunicaciones.h>
 #include <Arduino.h>
-#include <ArduinoJson.h>				// OJO: Tener instalada una version NO BETA (a dia de hoy la estable es la 5.13.4). Alguna pata han metido en la 6
-#include <WiFi.h>
+#include <ArduinoJson.h>				// ATENCION: Implementada con version 5, mas concretamente version 5.13.4
 #include <PubSubClient.h>
+
+#ifdef ESP32
+  #include <WiFi.h>
+#else
+ #include <ESP8266WiFi.h>          
+#endif
 
 WiFiClient espClient;
 PubSubClient ClienteMQTT(espClient);
@@ -76,27 +81,19 @@ void Comunicaciones::SetRiegamaticoTopic(char l_RiegamticoTopic[33]){
 
 void Comunicaciones::FormaEstructuraTopics(){
 
-    //cmndTopic = "cmnd/" + String(mqtttopic) + "/#";
     strcpy(cmndTopic, "cmnd/");
     strcat(cmndTopic, mqtttopic);
     strcat(cmndTopic, "/#");
     
-    //statTopic = "stat/" + String(mqtttopic);
     strcpy(statTopic, "stat/");
     strcat(statTopic, mqtttopic);
 
-    //teleTopic = "tele/" + String(mqtttopic);
     strcpy(teleTopic, "tele/");
     strcat(teleTopic, mqtttopic);
 
-
-    //lwtTopic = teleTopic + "/LWT";
     strcpy(lwtTopic, teleTopic);
     strcat(lwtTopic, "/LWT");
-    
-    
-    //RiegamaticoTeleTopic = "tele/" + String(RiegamticoTopic) + "/#";
-    
+        
 }
 
 bool Comunicaciones::IsConnected(){
@@ -127,7 +124,6 @@ void Comunicaciones::Conectar(){
 
         char Mensaje[100];
 
-        // Suscribirse al topic de Entrada de Comandos y a los de tele y LWT del riegamatico
         if (ClienteMQTT.subscribe(cmndTopic, 1)) {
         
             strcpy(Mensaje, "Suscrito al topic de comandos: ");
