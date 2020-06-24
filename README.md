@@ -1,5 +1,9 @@
 # Comunicaciones
-Libreria para comunicaciones ESP32 ESP8264
+Libreria para comunicaciones ESP32 ESP8266
+
+
+
+
 
 Para adaptar desde la V 0.9:
 
