@@ -21,8 +21,8 @@ Comunicaciones::Comunicaciones(){
     strcpy(mqttusuario, "mosquitto");
     strcpy(mqttpassword, "nopasswd");
     strcpy(mqttclientid, "noclientid");
-    strcpy(RiegamticoTopic, "RIEGAMATICO");
-       
+    SubTeleTopicSet = false;
+
 }
 
 Comunicaciones::~Comunicaciones(){
@@ -57,7 +57,7 @@ void Comunicaciones::SetMqttPassword(char l_mqttpassword[19]){
 
 }
 
-void Comunicaciones::SetMqttTopic(char l_mqtttopic[33]){
+void Comunicaciones::SetMqttTopic(char l_mqtttopic[20]){
 
     strcpy(mqtttopic, l_mqtttopic);
     this->FormaEstructuraTopics();
@@ -72,9 +72,10 @@ void Comunicaciones::SetMqttClientId(char l_mqttclientid[15]){
 
 }
 
-void Comunicaciones::SetRiegamaticoTopic(char l_RiegamticoTopic[33]){
+void Comunicaciones::SetSubTeleTopic(char l_SubTeleTopic[100]){
 
-    strcpy(RiegamticoTopic, l_RiegamticoTopic);
+    strcpy(SubTeleTopic, l_SubTeleTopic);
+    SubTeleTopicSet = true;
     this->Desonectar();
 
 }
@@ -131,12 +132,34 @@ void Comunicaciones::Conectar(){
             MiCallbackEventos(EVENTO_CONECTADO, Mensaje);			
 
         }
-
+        
         else {
 
             strcpy(Mensaje, "ERROR al suscribirse al topic de comandos: ");
             strcat(Mensaje, cmndTopic);
             MiCallbackEventos(EVENTO_CONECTANDO, Mensaje);		
+
+        }
+
+        if (SubTeleTopicSet){
+
+
+           if (ClienteMQTT.subscribe(SubTeleTopic, 1)) {
+        
+                strcpy(Mensaje, "Suscrito al topic Telemetria: ");
+                strcat(Mensaje, SubTeleTopic);
+                MiCallbackEventos(EVENTO_CONECTADO, Mensaje);			
+
+            }
+            
+            else {
+
+                strcpy(Mensaje, "ERROR al suscribirse al topic de Telemetria: ");
+                strcat(Mensaje, SubTeleTopic);
+                MiCallbackEventos(EVENTO_CONECTANDO, Mensaje);		
+
+            } 
+
 
         }
             
@@ -170,12 +193,13 @@ void Comunicaciones::RxCallback(char* topic, byte* payload, unsigned int length)
 
     // Pero cojo y le meto en la ultima posicion el de final de cadena
     payload[length] = '\0';
+
     // Y con esta cosa tan bonita y simple el tio listo ya sabe hasta donde llenarme el char array c_payload, hasta el \0
     char *c_payload = (char *) payload;
 
+    // El topic lo paso a String para poder manejar mejor
     String s_topic = String(topic);
 
-    // Lo que viene en el char* payload viene de un buffer que trae KAKA, hay que limpiarlo (para eso nos pasan len y tal)
     // Sacamos el prefijo del topic, o sea lo que hay delante de la primera /
     int Indice1 = s_topic.indexOf("/");
     String Prefijo = s_topic.substring(0, Indice1);
@@ -187,6 +211,7 @@ void Comunicaciones::RxCallback(char* topic, byte* payload, unsigned int length)
         int Indice2 = s_topic.lastIndexOf("/");
         String Comando = s_topic.substring(Indice2 + 1);
 
+        // Vamos generando el JSON que pasaremos en la funcion
         DynamicJsonBuffer jsonBuffer;
         JsonObject& ObjJson = jsonBuffer.createObject();
         ObjJson.set("COMANDO",Comando);

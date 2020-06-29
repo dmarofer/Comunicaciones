@@ -24,16 +24,18 @@ private:
     // Variables internas de configuracion para el objeto MQTT
     char mqttserver[40];
 	char mqttport[6];
-	char mqtttopic[33];
+	char mqtttopic[20];
 	char mqttusuario[19];
 	char mqttpassword[19];
     char mqttclientid[33];
-    char RiegamticoTopic[33];
-
+    
     char cmndTopic[100];
 	char statTopic[100];
 	char teleTopic[100];
 	char lwtTopic[100];
+    
+    char SubTeleTopic[100];
+    bool SubTeleTopicSet;
     
     // Funcion para crear la estructura de los topics.
     void FormaEstructuraTopics();
@@ -63,7 +65,7 @@ public:
     void SetMqttPassword(char l_mqttpassword[19]);           // Configurar la contraseña
     void SetMqttTopic(char l_mqtttopic[33]);                 // Configurar el topic base
     void SetMqttClientId(char l_mqttclientid[33]);           // Configurar el topic base
-    void SetRiegamaticoTopic(char l_RiegamticoTopic[33]);    // Para las comunicaciones con riegamatico
+    void SetSubTeleTopic(char l_SubTeleTopic[100]);            // Para Suscribirse a un topic para recibir info
     void SetEventoCallback(TipoCallbackEvento ref);          // Para pasarme el manejador de eventos
     
     void Enviar(char Topic[100], char Payload[100]);         // Funcion para publicar un payload en un topic

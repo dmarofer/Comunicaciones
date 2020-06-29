@@ -1,0 +1,38 @@
+## Info de las comunicaciones de los Proyectos. Aplicar a TODOS
+
+COLAS
+-----------------------------------
+Colacomandos: JSON MIO [200] - {COMANDO:[20], PAYLOAD:[100]}
+ColaRespuestas: JSON MIO[200] - {TIPO:[5], CMND[20], MQTT[100], RESP[20]}
+ColaTelemetria: JSON TELE[200]
+
+COMUNICACIONES:
+-----------------------------------
+*TopicsBase[20]
+
+Topics Completos[100]
+Payload[100]
+Telemetria JSON [200]
+Evento (Info) [100]
+
+OTROS:
+-----------------------------------
+
+
+RESUMEN:
+-----------------------------------
+Los Topics Base maximo 20
+Los Topics completos maximo 100
+La telemetria en JSON maximo 200
+Los Comandos y el texto de la respuesta maximo 20
+
+
+ARREGLADOS:
+-----------------------------------
+
+LIBRERIA: NOT OK
+
+RIEGAMATICO: NOT OK
+ABONAMATICO: NOT OK
+PANIC: NOT OK
+DEFCON: NOT OK
