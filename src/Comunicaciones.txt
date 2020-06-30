@@ -2,15 +2,15 @@
 
 COLAS
 -----------------------------------
-Colacomandos: JSON MIO [200] - {COMANDO:[20], PAYLOAD:[100]}
-ColaRespuestas: JSON MIO[200] - {TIPO:[5], CMND[20], MQTT[100], RESP[20]}
-ColaTelemetria: JSON TELE[200]
+ColaCMND: JSON MIO [200] - {COMANDO:[20], PAYLOAD:[100]}
+ColaTX: JSON MIO[300] - {TIPO:[5], CMND:[20], MQTT:[75], RESP:[200]}
+ColaTelemetriaRX: JSON TELE[200]
+
 
 COMUNICACIONES:
 -----------------------------------
-*TopicsBase[20]
-
-Topics Completos[100]
+TopicsBase[20]
+Topics Completos[75]
 Payload[100]
 Telemetria JSON [200]
 Evento (Info) [100]
@@ -22,17 +22,17 @@ OTROS:
 RESUMEN:
 -----------------------------------
 Los Topics Base maximo 20
-Los Topics completos maximo 100
+Los Topics completos maximo 75
 La telemetria en JSON maximo 200
-Los Comandos y el texto de la respuesta maximo 20
+RESP para TX maximo 200. Ojo al anidar JSON que pone \"
 
 
 ARREGLADOS:
 -----------------------------------
 
-LIBRERIA: NOT OK
+LIBRERIA: OK
 
-RIEGAMATICO: NOT OK
+RIEGAMATICO: OK
 ABONAMATICO: NOT OK
 PANIC: NOT OK
 DEFCON: NOT OK

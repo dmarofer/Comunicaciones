@@ -29,12 +29,10 @@ private:
 	char mqttpassword[19];
     char mqttclientid[33];
     
-    char cmndTopic[100];
-	char statTopic[100];
-	char teleTopic[100];
-	char lwtTopic[100];
+    char cmndTopic[75];
+	char lwtTopic[75];
     
-    char SubTeleTopic[100];
+    char SubTeleTopic[75];
     bool SubTeleTopicSet;
     
     // Funcion para crear la estructura de los topics.
@@ -65,10 +63,10 @@ public:
     void SetMqttPassword(char l_mqttpassword[19]);           // Configurar la contraseña
     void SetMqttTopic(char l_mqtttopic[33]);                 // Configurar el topic base
     void SetMqttClientId(char l_mqttclientid[33]);           // Configurar el topic base
-    void SetSubTeleTopic(char l_SubTeleTopic[100]);            // Para Suscribirse a un topic para recibir info
+    void SetSubTeleTopic(char l_SubTeleTopic[75]);            // Para Suscribirse a un topic para recibir info
     void SetEventoCallback(TipoCallbackEvento ref);          // Para pasarme el manejador de eventos
     
-    void Enviar(char Topic[100], char Payload[100]);         // Funcion para publicar un payload en un topic
+    void Enviar(char Topic[75], char Payload[100]);         // Funcion para publicar un payload en un topic
 
     void Conectar();                                         // Funcion para Conectar al servidor MQTT y publicar el LWT
     void Desonectar();                                       // Funcion para desconectar del servidor MQTT

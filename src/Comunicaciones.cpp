@@ -86,13 +86,8 @@ void Comunicaciones::FormaEstructuraTopics(){
     strcat(cmndTopic, mqtttopic);
     strcat(cmndTopic, "/#");
     
-    strcpy(statTopic, "stat/");
-    strcat(statTopic, mqtttopic);
-
-    strcpy(teleTopic, "tele/");
-    strcat(teleTopic, mqtttopic);
-
-    strcpy(lwtTopic, teleTopic);
+    strcpy(lwtTopic, "tele/");
+    strcat(lwtTopic, mqtttopic);
     strcat(lwtTopic, "/LWT");
         
 }
@@ -168,7 +163,7 @@ void Comunicaciones::Conectar(){
     
 }
 
-void Comunicaciones::Enviar(char Topic[100], char Payload[100]){
+void Comunicaciones::Enviar(char Topic[75], char Payload[100]){
 
     ClienteMQTT.publish(Topic, Payload, false);
 
