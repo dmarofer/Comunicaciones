@@ -104,7 +104,7 @@ void Comunicaciones::Conectar(){
 
     ClienteMQTT.setServer(mqttserver, 1883);
     ClienteMQTT.setCallback(std::bind(&Comunicaciones::RxCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    ClienteMQTT.setKeepAlive(3);
+    ClienteMQTT.setKeepAlive(5);
     
     char Mensaje[100];
     strcpy(Mensaje, "Intentando conectar a ");
