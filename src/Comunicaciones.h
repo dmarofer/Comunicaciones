@@ -11,7 +11,7 @@ private:
     // Esto en cristiano moderno lo vamos a llamar por su nombre. Manejadores de eventos.
     // Voy a hacer un unico manejador de eventos que pase un evento de un tipo definido aqui, y un char array con informacion
     // Este envia el comando recibido en el fomrato JSON que yo me he inventado en un char array de 100 junto con un int tipo de evento 
-    typedef void(*TipoCallbackEvento)(unsigned int Evento_Comunicaciones, char Info[100]);  // Definir el tipo (pantilla) de la funcion callback que me tendran que pasar (aqui yo tengo que saber como es aunque no la tenga aun para usarla claro)
+    typedef void(*TipoCallbackEvento)(unsigned int Evento_Comunicaciones, char Info[200]);  // Definir el tipo (pantilla) de la funcion callback que me tendran que pasar (aqui yo tengo que saber como es aunque no la tenga aun para usarla claro)
                                                                                             // typedef crea un alias de un tipo. En este caso crea el typo Callback Mensaje recibido que es "puntero a una funcion void X (String, String)"
     TipoCallbackEvento MiCallbackEventos = nullptr;                                         // Instanaciar aqui el nuevo tipo vacio (nullptr porque recordemos que es puntero)
                                                                    
@@ -25,9 +25,9 @@ private:
     char mqttserver[40];
 	char mqttport[6];
 	char mqtttopic[20];
-	char mqttusuario[19];
-	char mqttpassword[19];
-    char mqttclientid[33];
+	char mqttusuario[20];
+	char mqttpassword[20];
+    char mqttclientid[20];
     
     char cmndTopic[75];
 	char lwtTopic[75];
@@ -58,15 +58,15 @@ public:
     ~Comunicaciones();
     
     // Funciones de configuracion
-    void SetMqttServidor(char* l_mqttserver);                // Configurar el servidor MQTT
-    void SetMqttUsuario(char l_mqttusuario[19]);             // Configurar el usuario
-    void SetMqttPassword(char l_mqttpassword[19]);           // Configurar la contraseña
-    void SetMqttTopic(char l_mqtttopic[33]);                 // Configurar el topic base
-    void SetMqttClientId(char l_mqttclientid[33]);           // Configurar el topic base
+    void SetMqttServidor(char l_mqttserver[40]);                // Configurar el servidor MQTT
+    void SetMqttUsuario(char l_mqttusuario[20]);             // Configurar el usuario
+    void SetMqttPassword(char l_mqttpassword[20]);           // Configurar la contraseña
+    void SetMqttTopic(char l_mqtttopic[20]);                 // Configurar el topic base
+    void SetMqttClientId(char l_mqttclientid[20]);           // Configurar el topic base
     void SetSubTeleTopic(char l_SubTeleTopic[75]);            // Para Suscribirse a un topic para recibir info
     void SetEventoCallback(TipoCallbackEvento ref);          // Para pasarme el manejador de eventos
     
-    void Enviar(char Topic[75], char Payload[100]);         // Funcion para publicar un payload en un topic
+    void Enviar(char Topic[75], char Payload[200]);         // Funcion para publicar un payload en un topic
 
     void Conectar();                                         // Funcion para Conectar al servidor MQTT y publicar el LWT
     void Desonectar();                                       // Funcion para desconectar del servidor MQTT

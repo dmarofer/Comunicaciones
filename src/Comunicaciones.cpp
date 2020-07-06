@@ -36,21 +36,21 @@ void Comunicaciones::SetEventoCallback(TipoCallbackEvento ref){
 
 }
 
-void Comunicaciones::SetMqttServidor(char* l_mqttserver){
+void Comunicaciones::SetMqttServidor(char l_mqttserver[40]){
 
     strcpy(mqttserver, l_mqttserver);
     this->Desonectar();
     
 }
 
-void Comunicaciones::SetMqttUsuario(char l_mqttusuario[19]){
+void Comunicaciones::SetMqttUsuario(char l_mqttusuario[20]){
 
     strcpy(mqttusuario, l_mqttusuario);
     this->Desonectar();
 
 }
 
-void Comunicaciones::SetMqttPassword(char l_mqttpassword[19]){
+void Comunicaciones::SetMqttPassword(char l_mqttpassword[20]){
 
     strcpy(mqttpassword, l_mqttpassword);
     this->Desonectar();
@@ -65,14 +65,14 @@ void Comunicaciones::SetMqttTopic(char l_mqtttopic[20]){
 
 }
 
-void Comunicaciones::SetMqttClientId(char l_mqttclientid[15]){
+void Comunicaciones::SetMqttClientId(char l_mqttclientid[20]){
 
     strcpy(mqttclientid, l_mqttclientid);
     this->Desonectar();
 
 }
 
-void Comunicaciones::SetSubTeleTopic(char l_SubTeleTopic[100]){
+void Comunicaciones::SetSubTeleTopic(char l_SubTeleTopic[75]){
 
     strcpy(SubTeleTopic, l_SubTeleTopic);
     SubTeleTopicSet = true;
@@ -163,7 +163,7 @@ void Comunicaciones::Conectar(){
     
 }
 
-void Comunicaciones::Enviar(char Topic[75], char Payload[100]){
+void Comunicaciones::Enviar(char Topic[75], char Payload[200]){
 
     ClienteMQTT.publish(Topic, Payload, false);
 
@@ -212,7 +212,7 @@ void Comunicaciones::RxCallback(char* topic, byte* payload, unsigned int length)
         ObjJson.set("COMANDO",Comando);
         ObjJson.set("PAYLOAD",c_payload);
 
-        char JSONmessageBuffer[100];
+        char JSONmessageBuffer[200];
         ObjJson.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
         
 
