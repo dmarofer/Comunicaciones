@@ -160,12 +160,21 @@ void Comunicaciones::Conectar(){
             
     }
 
+    else {
+
+        strcpy(Mensaje, "ERROR conectando al servidor MQTT: ");
+        String t_State = String(ClienteMQTT.state());
+        strcat(Mensaje, t_State.c_str());
+        MiCallbackEventos(EVENTO_CONECTANDO, Mensaje);		
+
+    }
+
     
 }
 
 void Comunicaciones::Enviar(char Topic[75], char Payload[200]){
 
-    ClienteMQTT.publish(Topic, Payload, false);
+    if (ClienteMQTT.connected()){ClienteMQTT.publish(Topic, Payload, false);}
 
 }
 
