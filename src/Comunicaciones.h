@@ -34,7 +34,9 @@ private:
     
     char SubTeleTopic[75];
     bool SubTeleTopicSet;
-    
+
+    uint16_t KeepAliveSecs;
+
     // Funcion para crear la estructura de los topics.
     void FormaEstructuraTopics();
    
@@ -58,12 +60,14 @@ public:
     ~Comunicaciones();
     
     // Funciones de configuracion
-    void SetMqttServidor(char l_mqttserver[40]);                // Configurar el servidor MQTT
+    void SetMqttServidor(char l_mqttserver[40]);             // Configurar el servidor MQTT
     void SetMqttUsuario(char l_mqttusuario[20]);             // Configurar el usuario
     void SetMqttPassword(char l_mqttpassword[20]);           // Configurar la contraseña
     void SetMqttTopic(char l_mqtttopic[20]);                 // Configurar el topic base
     void SetMqttClientId(char l_mqttclientid[20]);           // Configurar el topic base
-    void SetSubTeleTopic(char l_SubTeleTopic[75]);            // Para Suscribirse a un topic para recibir info
+    void SetSubTeleTopic(char l_SubTeleTopic[75]);           // Para Suscribirse a un topic para recibir info
+    void SetKeepAlive(uint16_t l_KeepAliveTimeSecs);                   // Para configurar el timeout de la conexion
+    
     void SetEventoCallback(TipoCallbackEvento ref);          // Para pasarme el manejador de eventos
     
     void Enviar(char Topic[75], char Payload[200]);         // Funcion para publicar un payload en un topic

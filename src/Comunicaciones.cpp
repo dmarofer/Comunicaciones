@@ -22,7 +22,8 @@ Comunicaciones::Comunicaciones(){
     strcpy(mqttpassword, "nopasswd");
     strcpy(mqttclientid, "noclientid");
     SubTeleTopicSet = false;
-
+    KeepAliveSecs = 5;
+    
 }
 
 Comunicaciones::~Comunicaciones(){
@@ -80,6 +81,14 @@ void Comunicaciones::SetSubTeleTopic(char l_SubTeleTopic[75]){
 
 }
 
+void Comunicaciones::SetKeepAlive(uint16_t l_KeepAliveTimeSecs){
+
+    this->Desonectar();
+    KeepAliveSecs = l_KeepAliveTimeSecs;
+    ClienteMQTT.setKeepAlive(KeepAliveSecs);
+
+}
+
 void Comunicaciones::FormaEstructuraTopics(){
 
     strcpy(cmndTopic, "cmnd/");
@@ -104,8 +113,9 @@ void Comunicaciones::Conectar(){
 
     ClienteMQTT.setServer(mqttserver, 1883);
     ClienteMQTT.setCallback(std::bind(&Comunicaciones::RxCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    ClienteMQTT.setKeepAlive(5);
-    
+    ClienteMQTT.setKeepAlive(KeepAliveSecs);
+    ClienteMQTT.setSocketTimeout(5);
+        
     char Mensaje[100];
     strcpy(Mensaje, "Intentando conectar a ");
     strcat(Mensaje, mqttserver);
@@ -182,7 +192,7 @@ void Comunicaciones::Desonectar(){
 
     // No lanzo evento mio porque se lanza en el callback del objeto MQTT
     ClienteMQTT.disconnect();
-    
+        
 }
 
 void Comunicaciones::RxCallback(char* topic, byte* payload, unsigned int length) {
