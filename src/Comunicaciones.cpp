@@ -188,6 +188,12 @@ void Comunicaciones::Enviar(char Topic[75], char Payload[200]){
 
 }
 
+void Comunicaciones::enviarRetained(char Topic[75], char Payload[200]){
+
+    if (ClienteMQTT.connected()){ClienteMQTT.publish(Topic, Payload, true);}
+
+}
+
 void Comunicaciones::Desonectar(){
 
     // No lanzo evento mio porque se lanza en el callback del objeto MQTT

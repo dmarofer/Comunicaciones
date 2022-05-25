@@ -70,7 +70,8 @@ public:
     
     void SetEventoCallback(TipoCallbackEvento ref);          // Para pasarme el manejador de eventos
     
-    void Enviar(char Topic[75], char Payload[200]);         // Funcion para publicar un payload en un topic
+    void Enviar(char Topic[75], char Payload[200]);         // Funcion para publicar un payload en un topic sin retain
+    void enviarRetained(char Topic[75], char Payload[200]); // Funcion para publicar un payload en un topic con Retain
 
     void Conectar();                                         // Funcion para Conectar al servidor MQTT y publicar el LWT
     void Desonectar();                                       // Funcion para desconectar del servidor MQTT
