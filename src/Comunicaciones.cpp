@@ -188,9 +188,9 @@ void Comunicaciones::Enviar(char Topic[75], char Payload[200]){
 
 }
 
-void Comunicaciones::enviarRetained(char Topic[75], char Payload[200]){
+void Comunicaciones::Enviar(char Topic[75], char Payload[200], bool retained){
 
-    if (ClienteMQTT.connected()){ClienteMQTT.publish(Topic, Payload, true);}
+    if (ClienteMQTT.connected()){ClienteMQTT.publish(Topic, Payload, retained);}
 
 }
 
