@@ -22,7 +22,7 @@ Comunicaciones::Comunicaciones(){
     strcpy(mqttpassword, "nopasswd");
     strcpy(mqttclientid, "noclientid");
     SubTeleTopicSet = false;
-    KeepAliveSecs = 5;
+    KeepAliveSecs = 60;
     
 }
 
